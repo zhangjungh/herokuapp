@@ -1,0 +1,36 @@
+$def with (title, images, links)
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="referrer" content="never">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="./static/lazyload.css">
+</head>
+<body style="margin: 0px;">
+
+<h2>$title</h2>
+<h3 id="demo">loading:</h3>
+
+<div class="w3-show-inline-block">
+  <div class="w3-bar" align="center">
+$for l in links:
+    <a class="button" href=$l[0]>$l[1]</a>
+  </div>
+</div>
+
+<div class="wrapper">
+$for i in images:
+    <img rel="noreferrer" src="./static/loading.gif" data-src="$i"> 
+</div>
+
+<div class="w3-show-inline-block">
+  <div class="w3-bar" align="center">
+$for l in links:
+    <a class="button" href=$l[0]>$l[1]</a>
+  </div>
+</div>
+
+<script src="./static/lazyload.js"></script>
+
+</body>
+</html>

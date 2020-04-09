@@ -1,0 +1,6 @@
+requests
+lxml
+beautifulsoup4
+whitenoise
+web.py==0.40
+gunicorn
