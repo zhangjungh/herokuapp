@@ -1,0 +1,6 @@
+#python compiled
+__pycache__
+*.pyc
+
+#vscode config
+.vscode/.ropeproject
