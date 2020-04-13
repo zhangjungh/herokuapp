@@ -6,10 +6,13 @@ from bs4 import BeautifulSoup
 import json
 import logging
 from whitenoise import WhiteNoise
+import mathgen
+import model
 
+# parse url functions
 def parse_url(url):
     if 'jsmlny.' in url:
-        return parse_url_jsmlny(url)
+        return parse_url_json(url)
     else:
         return parse_url_lazy(url)
 
@@ -42,7 +45,7 @@ def parse_url_lazy(url):
     else:
         return ()
 
-def parse_url_jsmlny(url):
+def parse_url_json(url):
     ru = 'https://comiccdnhw.jsmlny.top/hcomic/chaptercontent?chapterId='
     title = url.split('chapterId=')[1]
     url = ru + title
@@ -71,6 +74,7 @@ render = web.template.render('templates/')
 
 urls = (
     '/', 'index',
+    '/math', 'mymath',
     '/favicon.ico', 'icon')
 
 app = web.application(urls, globals()).wsgifunc()
@@ -78,6 +82,7 @@ app = WhiteNoise(app, root='static/', prefix='static/')
 
 logger = logging.getLogger('gunicorn.error')
 
+# process all requests here except specified 
 class index: 
     def response(self, url):
         try:
@@ -110,6 +115,15 @@ class index:
 # Process favicon.ico requests
 class icon:
     def GET(self): raise web.seeother("/static/favico.png")
+
+# process math requests
+class mymath:
+    def GET(self):
+        answers = model.get_answers()
+        #logger.info(answers.length())
+        #for a in answers:
+        #    logger.info(a.range)
+        return render.math(answers)
 
 if __name__=="__main__":
     web.internalerror = web.debugerror

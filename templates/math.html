@@ -1,0 +1,34 @@
+$def with (items)
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="referrer" content="never">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="./static/lazyload.css">
+</head>
+<body style="margin: 0px;">
+
+<div class="w3-show-inline-block">
+  <div class="w3-bar" align="left">
+$for item in items:
+    <a class="button" onclick="myFunction($item.id)">$item.range</a>
+    <div id=$item.id class="hidden">
+      $for text in item.answer.split('\n'):
+      <p>$text</p>
+    </div>
+ </div>
+</div>
+
+<script>
+    function myFunction(name) {
+      var x = document.getElementById(name);
+      if (x.style.display === "block") {
+        x.style.display = "none";
+      } else {
+        x.style.display = "block";
+      }
+    }
+</script>
+
+</body>
+</html>
