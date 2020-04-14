@@ -3,4 +3,7 @@ __pycache__
 *.pyc
 
 #vscode config
-.vscode/.ropeproject
+.vscode
+
+#db config
+db.conf.ini
