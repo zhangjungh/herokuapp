@@ -5,14 +5,31 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Python: web.py",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "args": [
+                "10098"
+            ],
+            "console": "integratedTerminal"
+        },
+        {
             "name": "Python: Gunicorn",
             "type": "python",
             "request": "launch",
             "program": "/home/jun/.local/bin/gunicorn",
             "args": [
-                "main:app", "--bind=0.0.0.0:10099", "--reload", "-w", "1"
-            ],            
-            "console": "integratedTerminal"
+                "main:app",
+                "--bind=0.0.0.0:10099",
+                "--reload",
+                "-w",
+                "1"
+            ],
+            "console": "integratedTerminal",
+            "env": {
+                "RUN_WSGI":"gunicorn"
+            }
         }
     ]
 }

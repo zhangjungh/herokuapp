@@ -1,4 +1,5 @@
 # -*- coding: UTF-8 -*-
+import os
 import web
 import base64
 import requests
@@ -77,10 +78,15 @@ urls = (
     '/math', 'mymath',
     '/favicon.ico', 'icon')
 
-app = web.application(urls, globals()).wsgifunc()
-app = WhiteNoise(app, root='static/', prefix='static/')
+envwsgi = os.getenv('RUN_WSGI')
+if envwsgi:
+    app = web.application(urls, globals()).wsgifunc()
+    app = WhiteNoise(app, root='static/', prefix='static/')
 
-logger = logging.getLogger('gunicorn.error')
+    logger = logging.getLogger('gunicorn.error')
+else:
+    app = web.application(urls, globals())
+    logger = logging.getLogger()
 
 # process all requests here except specified 
 class index: 
@@ -93,7 +99,7 @@ class index:
                 if b:
                     return render.image(a, b, c)
         except:
-            return render.formtest('Error: ' + web.ctx['ip'])
+            return render.index('Error: ' + web.ctx['ip'])
 
     def GET(self): 
         input = web.input()
@@ -102,7 +108,8 @@ class index:
             url = b.decode('ascii')
             return self.response(url)
         else:
-            return render.formtest('Hello: ' + web.ctx['ip'])
+            #return render.login()
+            return render.index('Hello: ' + web.ctx['ip'])
 
     def POST(self): 
         input = web.input()
@@ -110,7 +117,7 @@ class index:
         if 'tar' in input:
             return self.response(input.tar)
         else:
-            return render.formtest('Hello: ' + web.ctx['ip'])
+            return render.index('Hello: ' + web.ctx['ip'])
 
 # Process favicon.ico requests
 class icon:
@@ -126,3 +133,10 @@ class mymath:
 if __name__=="__main__":
     web.internalerror = web.debugerror
     app.run()
+
+#todo list:
+# login/session
+# combine one db
+# scheme user db
+# scheme wrong user db, block by ip with max try
+# scheme mv
