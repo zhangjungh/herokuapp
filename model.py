@@ -1,14 +1,38 @@
 # -*- coding: UTF-8 -*-
 import web
+from configparser import ConfigParser
+import sys
 
-db = web.database(
-    dbn='postgres',
-    host='127.0.0.1',
-    port=10090,
-    user='postgres',
-    pw='pcommonP@55',
-    db='demodb',
-)
+# this is a pointer to the module object instance itself.
+this = sys.modules[__name__]
+
+# we can explicitly make assignments on it 
+this.db = None
+
+def init(filename):
+    if this.db is None:
+        try:
+            parser = ConfigParser()
+            parser.read(filename)
+
+            # get section, default to postgresql
+            db = {}
+            if parser.has_section('postgresql'):
+                params = parser.items('postgresql')
+                for param in params:
+                    db[param[0]] = param[1]
+
+            this.db = web.database(
+                dbn='postgres',
+                host=db['host'],
+                port=db['port'],
+                user=db['user'],
+                pw=db['pw'],
+                db=db['db'],
+            )
+        except:
+            this.db = None
+
 
 # maths table
 create_maths_table = '''CREATE TABLE maths
@@ -18,8 +42,9 @@ question TEXT,
 answer TEXT NOT NULL); '''
 
 def get_answers():
-    return db.select('maths', limit=10, order="id DESC")
+    return this.db.select('maths', limit=10, order="id DESC") if this.db else None
 
 
 def put_anwsers(text):
-    db.insert("todo", title=text)
+    return this.db.insert("todo", title=text) if this.db else None
+

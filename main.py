@@ -119,10 +119,8 @@ class icon:
 # process math requests
 class mymath:
     def GET(self):
+        model.init('db.conf.ini')
         answers = model.get_answers()
-        #logger.info(answers.length())
-        #for a in answers:
-        #    logger.info(a.range)
         return render.math(answers)
 
 if __name__=="__main__":

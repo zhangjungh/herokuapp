@@ -1,0 +1,9 @@
+#python compiled
+__pycache__
+*.pyc
+
+#vscode config
+.vscode
+
+#db config
+db.conf.ini
