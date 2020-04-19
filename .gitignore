@@ -7,3 +7,6 @@ __pycache__
 
 #db config
 db.conf.ini
+
+#local sessions
+.sessions

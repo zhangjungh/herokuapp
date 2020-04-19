@@ -1,3 +1,4 @@
+$def with (msg)
 <!DOCTYPE html>
 <html>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -6,20 +7,21 @@
 
 <div align="center">
 <form action="/login" method="POST">
-	<table id="login">
-		<tr>
-			<td>User: </td>
-			<td><input type="text" name="user"></td>
-		</tr>
-		<tr>
-			<td>Password: </td>
-			<td><input type="password" name="passwd"></td>
-		</tr>
-		<tr>
-			<td></td>
-			<td><input type="submit" value="LOGIN"></td>
-		</tr>
-	</table>
+    <label for="login">$msg</label>
+    <table id="login">
+        <tr>
+            <td>User: </td>
+            <td><input type="text" name="user"></td>
+        </tr>
+        <tr>
+            <td>Password: </td>
+            <td><input type="password" name="passwd"></td>
+        </tr>
+        <tr>
+            <td></td>
+            <td><input type="submit" value="LOGIN"></td>
+        </tr>
+    </table>
 </form>
 </div>
 

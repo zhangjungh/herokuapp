@@ -8,6 +8,7 @@ this = sys.modules[__name__]
 
 # we can explicitly make assignments on it 
 this.db = None
+this.salt = ''
 
 def init(filename):
     if this.db is None:
@@ -30,16 +31,12 @@ def init(filename):
                 pw=db['pw'],
                 db=db['db'],
             )
+
+            if parser.has_section('pwsalt'):
+                this.salt = parser.items('pwsalt')[0][1]
+
         except:
             this.db = None
-
-
-# maths table
-create_maths_table = '''CREATE TABLE maths
-(id SERIAL PRIMARY KEY,
-range  CHAR(32) NOT NULL,
-question TEXT,
-answer TEXT NOT NULL); '''
 
 def get_answers():
     return this.db.select('maths', limit=10, order="id DESC") if this.db else None
@@ -48,3 +45,5 @@ def get_answers():
 def put_anwsers(text):
     return this.db.insert("todo", title=text) if this.db else None
 
+def get_user(name):
+    return this.db.select('users', where={'username': name})[0] if this.db else None

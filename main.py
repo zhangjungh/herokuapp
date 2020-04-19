@@ -2,6 +2,7 @@
 import os
 import web
 import base64
+import hashlib
 import requests
 from bs4 import BeautifulSoup
 import json
@@ -70,23 +71,38 @@ def parse_url_json(url):
     else:
         return ()
 
-
-render = web.template.render('templates/')
-
+# urls
 urls = (
     '/', 'index',
+    '/login', 'login',
     '/math', 'mymath',
     '/favicon.ico', 'icon')
 
-envwsgi = os.getenv('RUN_WSGI')
-if envwsgi:
-    app = web.application(urls, globals()).wsgifunc()
-    app = WhiteNoise(app, root='static/', prefix='static/')
+# wsgi or not
+appwsgi = None
 
+#allow sessions work
+web.config.debug = False
+app = web.application(urls, globals())
+logger = logging.getLogger()
+
+if not os.getenv('WEB_RUN'):
+    appwsgi = app.wsgifunc()
+    appwsgi = WhiteNoise(appwsgi, root='static/', prefix='static/')
     logger = logging.getLogger('gunicorn.error')
+
+# sessions can be work in debug mode
+if web.config.get('_session') is None:
+    session = web.session.Session(app, web.session.DiskStore('sessions'), initializer={'login': 0, 'privilege': 0})
+    web.config._session = session
 else:
-    app = web.application(urls, globals())
-    logger = logging.getLogger()
+    session = web.config._session
+
+if appwsgi is not None:
+    app = appwsgi
+
+# renders with session context
+render = web.template.render('templates/', globals={'context': session})
 
 # process all requests here except specified 
 class index: 
@@ -101,23 +117,28 @@ class index:
         except:
             return render.index('Error: ' + web.ctx['ip'])
 
-    def GET(self): 
-        input = web.input()
-        if 'data' in input:
-            b = base64.b64decode(input.data.encode('ascii'))
-            url = b.decode('ascii')
-            return self.response(url)
+    def GET(self):
+        if session.get('login', 0):
+            input = web.input()
+            if 'data' in input:
+                b = base64.b64decode(input.data.encode('ascii'))
+                url = b.decode('ascii')
+                return self.response(url)
+            else:
+                return render.index('Hello: ' + web.ctx['ip'])
         else:
-            #return render.login()
-            return render.index('Hello: ' + web.ctx['ip'])
+            raise web.seeother('/login')
 
-    def POST(self): 
-        input = web.input()
-        #print(input)
-        if 'tar' in input:
-            return self.response(input.tar)
+    def POST(self):
+        if session.get('login', 0):
+            input = web.input()
+            #print(input)
+            if 'tar' in input:
+                return self.response(input.tar)
+            else:
+                return render.index('Hello: ' + web.ctx['ip'])
         else:
-            return render.index('Hello: ' + web.ctx['ip'])
+            raise web.seeother('/login')
 
 # Process favicon.ico requests
 class icon:
@@ -126,17 +147,54 @@ class icon:
 # process math requests
 class mymath:
     def GET(self):
+        if session.get('login', 0):
+            model.init('db.conf.ini')
+            answers = model.get_answers()
+            return render.math(answers)
+        else:
+            raise web.seeother('/login')
+
+# login
+class login:
+    def GET(self):
+        if session.get('login', 0):
+            raise web.seeother('/')
+        else:
+            return render.login('Plese Login')
+
+    def POST(self):
         model.init('db.conf.ini')
-        answers = model.get_answers()
-        return render.math(answers)
+        name, passwd = web.input().user, web.input().passwd + model.salt
+        ident = model.get_user(name)
+        try:
+            pwd = hashlib.sha1(passwd.encode()).hexdigest()
+            if pwd == ident['password']:
+                session.login = 1
+                session.privilege = ident['privilege']
+                return render.index('Hello: ' + web.ctx['ip'])
+            else:
+                session.login = 0
+                session.privilege = 0
+                return render.login('Wrong username or password!')
+        except:
+            session.login = 0
+            session.privilege = 0
+            return render.login('Error happens!')
 
 if __name__=="__main__":
-    web.internalerror = web.debugerror
     app.run()
 
 #todo list:
-# login/session
-# combine one db
-# scheme user db
 # scheme wrong user db, block by ip with max try
 # scheme mv
+
+# nginx to host
+# apply ssl on CF 65536.io/2020/03/607.html or certbot
+# redirect http to https
+# allow CF cache; ip whitelist
+# new domain proxied with 80/443 port open
+# apply new VM???
+# fix postgres ip
+
+# pgweb server?
+# bitwarden server?
