@@ -9,4 +9,4 @@ __pycache__
 db.conf.ini
 
 #local sessions
-.sessions
+sessions
