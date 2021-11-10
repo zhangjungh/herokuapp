@@ -73,10 +73,11 @@ def parse_url_json(url):
 
 # urls
 urls = (
-    '/', 'index',
+    '/ip', 'ipecho',
     '/login', 'login',
     '/math', 'mymath',
-    '/favicon.ico', 'icon')
+    '/favicon.ico', 'icon',
+    '/.*', 'index')
 
 # wsgi or not
 appwsgi = None
@@ -104,6 +105,15 @@ if appwsgi is not None:
 # renders with session context
 render = web.template.render('templates/', globals={'context': session})
 
+def getRealIP():
+    forward = 'HTTP_X_FORWARDED_FOR'
+    real_ip = 'HTTP_X_REAL_IP'
+    if forward in web.ctx.env:
+        return web.ctx.env[forward].split(',')[0]
+    if real_ip in web.ctx.env:
+        return web.ctx.env[real_ip]    
+    return web.ctx['ip']
+
 # process all requests here except specified 
 class index: 
     def response(self, url):
@@ -115,7 +125,7 @@ class index:
                 if b:
                     return render.image(a, b, c)
         except:
-            return render.index('Error: ' + web.ctx['ip'])
+            return render.index('Error: ' + getRealIP())
 
     def GET(self):
         if session.get('login', 0):
@@ -125,7 +135,7 @@ class index:
                 url = b.decode('ascii')
                 return self.response(url)
             else:
-                return render.index('Hello: ' + web.ctx['ip'])
+                return render.index('Hello: ' + getRealIP())
         else:
             raise web.seeother('/login')
 
@@ -136,7 +146,7 @@ class index:
             if 'tar' in input:
                 return self.response(input.tar)
             else:
-                return render.index('Hello: ' + web.ctx['ip'])
+                return render.index('Hello: ' + getRealIP())
         else:
             raise web.seeother('/login')
 
@@ -153,6 +163,30 @@ class mymath:
             return render.math(answers)
         else:
             raise web.seeother('/login')
+
+# process ip requests
+class ipecho:
+    def GET(self):
+        return getRealIP()
+    def POST(self):
+        #web.header('Access-Control-Allow-Origin',      '*')
+        #web.header('Access-Control-Allow-Credentials', 'true')
+        #web.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+        try:
+            data = json.loads(web.data())
+            key = data['key']
+            id = data['id']
+            if not key == 'queryImage':
+                raise ValueError('wrong parameter!')
+            model.init('db.conf.ini')
+            image = model.get_image(id)
+            if not image:
+                raise ValueError('wrong id!')
+            web.header('Content-Type', 'application/json')
+            return json.dumps(image.data, ensure_ascii=False)
+        except:
+            ip = {'ip': getRealIP()}
+            return json.dumps(ip)
 
 # login
 class login:
@@ -171,7 +205,7 @@ class login:
             if pwd == ident['password']:
                 session.login = 1
                 session.privilege = ident['privilege']
-                return render.index('Hello: ' + web.ctx['ip'])
+                return render.index('Hello: ' + getRealIP())
             else:
                 session.login = 0
                 session.privilege = 0

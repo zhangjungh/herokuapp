@@ -47,3 +47,6 @@ def put_anwsers(text):
 
 def get_user(name):
     return this.db.select('users', where={'username': name})[0] if this.db else None
+
+def get_image(id):
+    return this.db.select('images', where={'id': id})[0] if this.db else None
