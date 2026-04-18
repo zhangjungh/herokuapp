@@ -1,0 +1,37 @@
+services:
+  app:
+    build:
+      context: .
+    image: herokuapp:local
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      SESSION_DIR: /app/instance/sessions
+      LOCAL_ADMIN_FILE: /app/instance/local_admin.json
+    volumes:
+      - app-instance:/app/instance
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: herokuapp
+      POSTGRES_USER: herokuapp
+      POSTGRES_PASSWORD: herokuapp
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U herokuapp -d herokuapp"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  app-instance:
+  postgres-data:

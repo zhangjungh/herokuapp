@@ -15,10 +15,12 @@ A refreshed version of an older Heroku-era Python app.
 - Python **3.11** target
 - **uv** project management via `pyproject.toml`
 - **Docker** support
+- `docker-compose.yml` for local app + Postgres
 - environment-variable configuration
 - compatibility fallback for legacy `db.conf.ini`
 - refreshed templates/CSS/JS structure
 - built-in bootstrap admin credentials with forced first-login password change
+- container healthcheck and non-root runtime user
 
 ## Run locally with uv
 
@@ -29,16 +31,40 @@ uv run flask --app app.main run --debug
 
 Open <http://127.0.0.1:5000>
 
-## Run with Docker
+## Build Docker image
 
 ```bash
 docker build -t herokuapp .
+```
+
+## Run with Docker
+
+```bash
 docker run --rm -p 8000:8000 \
-  -e SECRET_KEY=change-me \
+  --env-file .env \
   herokuapp
 ```
 
 Open <http://127.0.0.1:8000>
+
+## Run with Docker Compose
+
+1. Copy the example env file:
+
+```bash
+cp .env.example .env
+```
+
+2. Start the stack:
+
+```bash
+docker compose up --build
+```
+
+This starts:
+- the Flask app on port `8000`
+- PostgreSQL on port `5432`
+- a persistent app instance volume for session/admin state
 
 ## Default login
 
@@ -72,8 +98,17 @@ Set values via environment variables when possible:
 - `DEFAULT_ADMIN_PASSWORD`
 - `LOG_LEVEL`
 
+See `.env.example` for a starter configuration.
+
 Legacy fallback:
 - `db.conf.ini` is still supported for database settings and password salt.
+
+## Container notes
+
+- container listens on `0.0.0.0:8000`
+- Docker healthcheck probes `GET /ip`
+- container runs as a non-root `appuser`
+- app state defaults to `/app/instance`
 
 ## Notes
 
