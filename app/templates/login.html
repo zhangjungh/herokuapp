@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Login · herokuapp{% endblock %}
+{% block content %}
+  <section class="card auth-card">
+    <div class="eyebrow">sign in</div>
+    <h2>Login</h2>
+    <p class="muted">{{ msg }}</p>
+    <form method="post" class="stack auth-form">
+      <label>
+        <span>User</span>
+        <input type="text" name="user" autocomplete="username" required>
+      </label>
+      <label>
+        <span>Password</span>
+        <input type="password" name="passwd" autocomplete="current-password" required>
+      </label>
+      <button type="submit">Login</button>
+    </form>
+  </section>
+{% endblock %}

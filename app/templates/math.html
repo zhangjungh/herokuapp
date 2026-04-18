@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Math · herokuapp{% endblock %}
+{% block content %}
+  <section class="card">
+    <div class="eyebrow">database-backed</div>
+    <h2>Recent math answers</h2>
+    {% if items %}
+      <div class="accordion-list">
+        {% for item in items %}
+          <details class="accordion-item">
+            <summary>{{ item.range }}</summary>
+            <div class="accordion-body">
+              {% for line in item.answer.split('\n') %}
+                <p>{{ line }}</p>
+              {% endfor %}
+            </div>
+          </details>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="muted">No database data available.</p>
+    {% endif %}
+  </section>
+{% endblock %}

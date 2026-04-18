@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} · herokuapp{% endblock %}
+{% block content %}
+  <section class="card viewer-header">
+    <div>
+      <div class="eyebrow">chapter viewer</div>
+      <h2>{{ title }}</h2>
+    </div>
+    {% if links %}
+      <div class="actions wrap">
+        {% for href, label in links %}
+          <a class="secondary-button" href="{{ href }}">{{ label }}</a>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </section>
+
+  <section class="gallery">
+    {% for image in images %}
+      <figure class="gallery-item">
+        <img loading="lazy" src="{{ image }}" alt="Comic page {{ loop.index }}">
+      </figure>
+    {% endfor %}
+  </section>
+{% endblock %}

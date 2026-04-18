@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Viewer · herokuapp{% endblock %}
+{% block content %}
+  <section class="card hero-card">
+    <div>
+      <div class="eyebrow">comic viewer</div>
+      <h2>Paste a supported chapter URL</h2>
+      <p class="muted">Supported domains include the legacy sources already used by the original app.</p>
+    </div>
+    <form class="stack" method="post">
+      <label for="tar">{{ msg }}</label>
+      <input type="url" id="tar" name="tar" placeholder="https://example.com/chapter/...">
+      <div class="actions">
+        <button type="submit">Open</button>
+        <a class="secondary-button" href="{{ url_for('math_view') }}">Open math answers</a>
+      </div>
+    </form>
+  </section>
+{% endblock %}

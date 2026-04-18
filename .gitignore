@@ -1,12 +1,24 @@
-#python compiled
-__pycache__
-*.pyc
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
 
-#vscode config
-.vscode
+# Virtual environments
+.venv/
+.env
+.env.*
 
-#db config
+# Editor files
+.vscode/
+.idea/
+
+# Local runtime data
+sessions/
+instance/
+*.sqlite3
+
+# Legacy/local DB config
 db.conf.ini
 
-#local sessions
-sessions
+# OS files
+.DS_Store
