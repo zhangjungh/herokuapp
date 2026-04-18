@@ -8,13 +8,20 @@
     <form method="post" class="stack auth-form">
       <label>
         <span>User</span>
-        <input type="text" name="user" autocomplete="username" required>
+        <input type="text" name="user" autocomplete="username" value="{{ default_username }}" required>
       </label>
       <label>
         <span>Password</span>
-        <input type="password" name="passwd" autocomplete="current-password" required>
+        <input type="password" name="passwd" autocomplete="current-password" value="{{ default_password }}" required>
       </label>
       <button type="submit">Login</button>
     </form>
+
+    <div class="note-panel">
+      <strong>Bootstrap login</strong>
+      <p>Default username: <code>{{ default_username }}</code></p>
+      <p>Default password: <code>{{ default_password }}</code></p>
+      <p class="muted">You’ll be forced to change both after first login.</p>
+    </div>
   </section>
 {% endblock %}

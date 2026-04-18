@@ -30,7 +30,9 @@ def _read_legacy_config() -> tuple[dict[str, str], str]:
 def load_settings() -> dict[str, object]:
     legacy_db, legacy_salt = _read_legacy_config()
 
-    session_dir = Path(os.getenv("SESSION_DIR", str(BASE_DIR / "instance" / "sessions")))
+    instance_dir = BASE_DIR / "instance"
+    instance_dir.mkdir(parents=True, exist_ok=True)
+    session_dir = Path(os.getenv("SESSION_DIR", str(instance_dir / "sessions")))
     session_dir.mkdir(parents=True, exist_ok=True)
 
     return {
@@ -42,5 +44,9 @@ def load_settings() -> dict[str, object]:
         "DB_NAME": os.getenv("DB_NAME", legacy_db.get("db", "")),
         "PASSWORD_SALT": os.getenv("PASSWORD_SALT", legacy_salt),
         "SESSION_DIR": session_dir,
+        "INSTANCE_DIR": instance_dir,
+        "LOCAL_ADMIN_FILE": Path(os.getenv("LOCAL_ADMIN_FILE", str(instance_dir / "local_admin.json"))),
+        "DEFAULT_ADMIN_USERNAME": os.getenv("DEFAULT_ADMIN_USERNAME", "admin"),
+        "DEFAULT_ADMIN_PASSWORD": os.getenv("DEFAULT_ADMIN_PASSWORD", "change-me-now"),
         "LOG_LEVEL": os.getenv("LOG_LEVEL", "INFO").upper(),
     }

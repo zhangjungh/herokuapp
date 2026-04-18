@@ -18,6 +18,7 @@ A refreshed version of an older Heroku-era Python app.
 - environment-variable configuration
 - compatibility fallback for legacy `db.conf.ini`
 - refreshed templates/CSS/JS structure
+- built-in bootstrap admin credentials with forced first-login password change
 
 ## Run locally with uv
 
@@ -39,6 +40,21 @@ docker run --rm -p 8000:8000 \
 
 Open <http://127.0.0.1:8000>
 
+## Default login
+
+By default, the app creates a local bootstrap admin file on first run.
+
+- username: `admin`
+- password: `change-me-now`
+
+On first successful login, the app forces you to change them before continuing.
+
+You can override these defaults with:
+
+- `DEFAULT_ADMIN_USERNAME`
+- `DEFAULT_ADMIN_PASSWORD`
+- `LOCAL_ADMIN_FILE`
+
 ## Configuration
 
 Set values via environment variables when possible:
@@ -51,6 +67,9 @@ Set values via environment variables when possible:
 - `DB_NAME`
 - `PASSWORD_SALT`
 - `SESSION_DIR`
+- `LOCAL_ADMIN_FILE`
+- `DEFAULT_ADMIN_USERNAME`
+- `DEFAULT_ADMIN_PASSWORD`
 - `LOG_LEVEL`
 
 Legacy fallback:
@@ -60,4 +79,5 @@ Legacy fallback:
 
 - `/ip` remains public.
 - `/math` and the main viewer require login.
-- Password validation still supports the legacy SHA1+salt format for compatibility; this should be upgraded separately if you still use local auth.
+- Legacy DB auth still supports the old SHA1+salt format for compatibility.
+- The built-in bootstrap admin uses Werkzeug password hashing and stores its local credentials in `instance/local_admin.json` unless overridden.

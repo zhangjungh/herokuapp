@@ -18,7 +18,7 @@ from flask import (
 from whitenoise import WhiteNoise
 
 from .config import load_settings
-from .db import fetch_answers, fetch_image, verify_password
+from .db import fetch_answers, fetch_image, update_local_admin_password, verify_password
 from .services import decode_target, is_supported_url, parse_url
 
 
@@ -56,17 +56,14 @@ def get_real_ip() -> str:
     return request.headers.get("X-Real-IP", request.remote_addr or "unknown")
 
 
-def is_logged_in() -> bool:
-    if "sid" not in session or session_store is None:
-        return False
-    payload = session_store.load(session["sid"])
-    return bool(payload.get("login"))
-
-
 def current_session_data() -> dict:
     if "sid" not in session or session_store is None:
         return {"login": 0, "privilege": 0}
     return session_store.load(session["sid"]) or {"login": 0, "privilege": 0}
+
+
+def is_logged_in() -> bool:
+    return bool(current_session_data().get("login"))
 
 
 def write_session_data(data: dict) -> None:
@@ -120,6 +117,9 @@ def create_app() -> Flask:
     @app.route("/login", methods=["GET", "POST"])
     def login():
         if is_logged_in():
+            session_data = current_session_data()
+            if session_data.get("must_change_password"):
+                return redirect(url_for("change_password"))
             return redirect(url_for("index"))
 
         if request.method == "POST":
@@ -127,12 +127,65 @@ def create_app() -> Flask:
             password = request.form.get("passwd", "")
             user = verify_password(username, password)
             if user:
-                write_session_data({"login": 1, "privilege": user.get("privilege", 0), "user": username})
+                write_session_data(
+                    {
+                        "login": 1,
+                        "privilege": user.get("privilege", 0),
+                        "user": user.get("username", username),
+                        "auth_source": user.get("auth_source", "unknown"),
+                        "must_change_password": bool(user.get("must_change_password", False)),
+                    }
+                )
+                if user.get("must_change_password"):
+                    return redirect(url_for("change_password"))
                 return redirect(url_for("index"))
             clear_session_data()
-            return render_template("login.html", msg="Wrong username or password!"), 401
+            return render_template(
+                "login.html",
+                msg="Wrong username or password!",
+                default_username=app.config["DEFAULT_ADMIN_USERNAME"],
+                default_password=app.config["DEFAULT_ADMIN_PASSWORD"],
+            ), 401
 
-        return render_template("login.html", msg="Please log in")
+        return render_template(
+            "login.html",
+            msg="Please log in",
+            default_username=app.config["DEFAULT_ADMIN_USERNAME"],
+            default_password=app.config["DEFAULT_ADMIN_PASSWORD"],
+        )
+
+    @app.route("/change-password", methods=["GET", "POST"])
+    def change_password():
+        if not is_logged_in():
+            return redirect(url_for("login"))
+
+        session_data = current_session_data()
+        if session_data.get("auth_source") != "local-bootstrap":
+            return redirect(url_for("index"))
+
+        if request.method == "POST":
+            new_username = request.form.get("new_user", "").strip()
+            new_password = request.form.get("new_passwd", "")
+            confirm_password = request.form.get("confirm_passwd", "")
+
+            if not new_username:
+                return render_template("change_password.html", msg="Username cannot be empty.") , 400
+            if len(new_password) < 8:
+                return render_template("change_password.html", msg="Password must be at least 8 characters."), 400
+            if new_password != confirm_password:
+                return render_template("change_password.html", msg="Passwords do not match."), 400
+
+            updated = update_local_admin_password(session_data.get("user", ""), new_username, new_password)
+            write_session_data(
+                {
+                    **session_data,
+                    "user": updated["username"],
+                    "must_change_password": False,
+                }
+            )
+            return redirect(url_for("index"))
+
+        return render_template("change_password.html", msg="Default credentials must be changed before continuing.")
 
     @app.route("/logout", methods=["POST"])
     def logout():
@@ -143,6 +196,8 @@ def create_app() -> Flask:
     def math_view():
         if not is_logged_in():
             return redirect(url_for("login"))
+        if current_session_data().get("must_change_password"):
+            return redirect(url_for("change_password"))
         answers = fetch_answers()
         return render_template("math.html", items=answers)
 
@@ -150,6 +205,8 @@ def create_app() -> Flask:
     def index():
         if not is_logged_in():
             return redirect(url_for("login"))
+        if current_session_data().get("must_change_password"):
+            return redirect(url_for("change_password"))
 
         if request.method == "POST":
             target = request.form.get("tar", "").strip()
